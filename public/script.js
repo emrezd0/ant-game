@@ -11,7 +11,7 @@ let players = {};
 let foods = [];
 let currentPlayer = null;
 const keys = {};
-let score = 0; // Skor değişkeni
+let score = 0;
 
 function startGame() {
     const username = document.getElementById("username").value.trim();
@@ -32,6 +32,11 @@ socket.on("updateFoods", (serverFoods) => {
     foods = serverFoods;
 });
 
+socket.on("gameOver", () => {
+    alert("Oyun bitti! Oyun yeniden başlıyor...");
+    location.reload();
+});
+
 function isColliding(obj1, obj2) {
     return (
         obj1.x < obj2.x + 10 &&
@@ -43,19 +48,16 @@ function isColliding(obj1, obj2) {
 
 function drawGame() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Çerçeve çiz
+    
     ctx.strokeStyle = "black";
     ctx.lineWidth = 5;
     ctx.strokeRect(0, 0, canvas.width, canvas.height);
 
-    // Yemleri çiz
     foods.forEach((food) => {
-        ctx.fillStyle = "#ff0000"; // Kırmızı renk
+        ctx.fillStyle = "#ff0000";
         ctx.fillRect(food.x, food.y, 10, 10);
     });
 
-    // Oyuncuları çiz
     for (let id in players) {
         const player = players[id];
         drawAnts(player);
@@ -64,11 +66,10 @@ function drawGame() {
         ctx.font = "12px Arial";
         ctx.fillText(player.username, player.x - 10, player.y - 10);
     }
-
-    // Skoru ekrana yazdır
+    
     ctx.fillStyle = "black";
-    ctx.font = "16px Arial";
-    ctx.fillText(`Skor: ${score}`, 10, 20);
+    ctx.font = "20px Arial";
+    ctx.fillText("Skor: " + score, 10, 20);
 }
 
 function drawAnts(player) {
@@ -76,10 +77,8 @@ function drawAnts(player) {
     let row = 0, col = 0;
 
     for (let i = 0; i < player.ants; i++) {
-        let antX = player.x + col * 12;
-        let antY = player.y + row * 12;
         ctx.fillStyle = player.color;
-        ctx.fillRect(antX, antY, 10, 10);
+        ctx.fillRect(player.x + col * 12, player.y + row * 12, 10, 10);
 
         col++;
         if (col >= size) {
@@ -119,7 +118,6 @@ function gameLoop() {
         if (keys["ArrowLeft"]) x -= speed;
         if (keys["ArrowRight"]) x += speed;
 
-        // Çerçeveden çıkmayı önle
         x = Math.max(5, Math.min(canvas.width - 15, x));
         y = Math.max(5, Math.min(canvas.height - 15, y));
 
@@ -127,19 +125,23 @@ function gameLoop() {
         currentPlayer.y = y;
 
         foods.forEach((food, index) => {
-            let antSize = Math.ceil(Math.sqrt(currentPlayer.ants));
-            for (let i = 0; i < currentPlayer.ants; i++) {
-                let antX = currentPlayer.x + (i % antSize) * 12;
-                let antY = currentPlayer.y + Math.floor(i / antSize) * 12;
-                if (isColliding({ x: antX, y: antY }, food)) {
-                    foods.splice(index, 1);
-                    currentPlayer.ants++;
-                    score += 5; // Her yem için 5 puan
-                    socket.emit("eatFood", { foodIndex: index });
-                    break;
-                }
+            if (isColliding(currentPlayer, food)) {
+                foods.splice(index, 1);
+                currentPlayer.ants++;
+                score += 5;
+                socket.emit("eatFood", { foodIndex: index });
             }
         });
+
+        for (let id in players) {
+            if (id !== socket.id) {
+                let otherPlayer = players[id];
+                if (isColliding(currentPlayer, otherPlayer) && currentPlayer.ants > otherPlayer.ants) {
+                    score += 50;
+                    socket.emit("playerEaten", { eatenId: id });
+                }
+            }
+        }
 
         socket.emit("move", { x, y });
     }

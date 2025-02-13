@@ -6,6 +6,8 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
+const PORT = process.env.PORT || 3000; // Render'ın portunu kullan
+
 app.use(express.static("public"));
 
 const players = {};
@@ -23,6 +25,7 @@ function getUniqueColor() {
     return colors[Math.floor(Math.random() * colors.length)];
 }
 
+// Rastgele yemleri oluştur
 for (let i = 0; i < 20; i++) {
     foods.push({ x: Math.random() * 800, y: Math.random() * 600 });
 }
@@ -86,4 +89,4 @@ io.on("connection", (socket) => {
     });
 });
 
-server.listen(3000, () => console.log("Sunucu çalışıyor: http://localhost:3000"));
+server.listen(PORT, () => console.log(`Sunucu çalışıyor: http://localhost:${PORT}`));
