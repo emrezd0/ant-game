@@ -6,7 +6,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-const PORT = process.env.PORT || 3000; // Render'ın portunu kullan
+const PORT = process.env.PORT || 3000;
 
 app.use(express.static("public"));
 
@@ -25,7 +25,7 @@ function getUniqueColor() {
     return colors[Math.floor(Math.random() * colors.length)];
 }
 
-// Rastgele yemleri oluştur
+// Yemleri oluştur
 for (let i = 0; i < 20; i++) {
     foods.push({ x: Math.random() * 800, y: Math.random() * 600 });
 }
@@ -50,35 +50,28 @@ io.on("connection", (socket) => {
         if (players[socket.id]) {
             players[socket.id].x = data.x;
             players[socket.id].y = data.y;
+        }
+        io.emit("updatePlayers", players);
+    });
 
-            // Yem yeme kontrolü
-            for (let i = 0; i < foods.length; i++) {
-                let food = foods[i];
-                let distance = Math.hypot(players[socket.id].x - food.x, players[socket.id].y - food.y);
-                if (distance < 10) {
-                    players[socket.id].ants += 1;
-                    foods.splice(i, 1);
-                    foods.push({ x: Math.random() * 800, y: Math.random() * 600 });
-                    io.emit("updateFoods", foods);
-                    break;
-                }
+    socket.on("eatFood", ({ foodIndex }) => {
+        if (foods[foodIndex]) {
+            foods.splice(foodIndex, 1);
+            foods.push({ x: Math.random() * 800, y: Math.random() * 600 });
+
+            if (players[socket.id]) {
+                players[socket.id].ants += 1;
             }
 
-            // Rakipleri yeme kontrolü
-            for (let id in players) {
-                if (id !== socket.id) {
-                    let other = players[id];
-                    let distance = Math.hypot(players[socket.id].x - other.x, players[socket.id].y - other.y);
+            io.emit("updateFoods", foods);
+            io.emit("updatePlayers", players);
+        }
+    });
 
-                    if (distance < 20 && players[socket.id].ants > other.ants) {
-                        players[socket.id].ants += other.ants;
-                        delete players[id];
-
-                        io.emit("updatePlayers", players);
-                    }
-                }
-            }
-
+    socket.on("playerEaten", ({ eatenId }) => {
+        if (players[eatenId]) {
+            players[socket.id].ants += players[eatenId].ants;
+            delete players[eatenId];
             io.emit("updatePlayers", players);
         }
     });

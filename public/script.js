@@ -5,7 +5,7 @@ const ctx = canvas.getContext("2d");
 canvas.width = 800;
 canvas.height = 600;
 
-document.getElementById("gameScreen").style.backgroundColor = "#d3d3d3"; // Soft gri arka plan
+document.getElementById("gameScreen").style.backgroundColor = "#d3d3d3";
 
 let players = {};
 let foods = [];
@@ -61,10 +61,6 @@ function drawGame() {
     for (let id in players) {
         const player = players[id];
         drawAnts(player);
-
-        ctx.fillStyle = "black";
-        ctx.font = "12px Arial";
-        ctx.fillText(player.username, player.x - 10, player.y - 10);
     }
     
     ctx.fillStyle = "black";
@@ -78,7 +74,9 @@ function drawAnts(player) {
 
     for (let i = 0; i < player.ants; i++) {
         ctx.fillStyle = player.color;
-        ctx.fillRect(player.x + col * 12, player.y + row * 12, 10, 10);
+        let antX = player.x + col * 12;
+        let antY = player.y + row * 12;
+        ctx.fillRect(antX, antY, 10, 10);
 
         col++;
         if (col >= size) {
@@ -125,11 +123,20 @@ function gameLoop() {
         currentPlayer.y = y;
 
         foods.forEach((food, index) => {
-            if (isColliding(currentPlayer, food)) {
-                foods.splice(index, 1);
-                currentPlayer.ants++;
-                score += 5;
-                socket.emit("eatFood", { foodIndex: index });
+            for (let i = 0; i < currentPlayer.ants; i++) {
+                let size = Math.ceil(Math.sqrt(currentPlayer.ants));
+                let row = Math.floor(i / size);
+                let col = i % size;
+                let antX = currentPlayer.x + col * 12;
+                let antY = currentPlayer.y + row * 12;
+                
+                if (isColliding({ x: antX, y: antY }, food)) {
+                    foods.splice(index, 1);
+                    currentPlayer.ants++;
+                    score += 5;
+                    socket.emit("eatFood", { foodIndex: index });
+                    return;
+                }
             }
         });
 
