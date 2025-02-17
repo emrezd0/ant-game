@@ -1,56 +1,71 @@
 body {
     margin: 0;
-    font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    font-family: 'Roboto', sans-serif;
+    background: linear-gradient(160deg, #c9a880 0%, #8c6b5d 100%);
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    color: white;
+    color: #fff;
+    overflow: hidden;
 }
 
 #loginScreen {
-    background: rgba(255, 255, 255, 0.2);
-    padding: 30px;
-    border-radius: 15px;
-    backdrop-filter: blur(10px);
+    background: rgba(90, 62, 54, 0.9);
+    padding: 40px;
+    border-radius: 20px;
+    backdrop-filter: blur(5px);
     text-align: center;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    border: 2px solid #6b4226;
 }
 
 h1 {
-    font-size: 32px;
-    margin-bottom: 10px;
+    font-family: 'Anton', sans-serif;
+    font-size: 2.5em;
+    letter-spacing: 3px;
+    color: #ffd700;
+    margin-bottom: 15px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
 }
 
 p {
-    font-size: 18px;
-    margin-bottom: 20px;
+    font-size: 1.2em;
+    margin-bottom: 25px;
+    color: #eee;
 }
 
 input {
-    padding: 12px;
-    border: none;
-    border-radius: 5px;
-    margin-bottom: 15px;
-    width: 80%;
-    font-size: 16px;
+    padding: 15px;
+    width: 250px;
+    border: 2px solid #6b4226;
+    border-radius: 8px;
+    font-size: 1.1em;
+    margin: 15px 0;
+    background: rgba(255,255,255,0.9);
     text-align: center;
 }
 
 button {
-    padding: 12px 20px;
-    background: #ff7b00;
-    color: white;
-    font-size: 18px;
-    border: none;
-    border-radius: 25px;
+    padding: 15px 40px;
+    background: #6b4226 !important;
+    color: #fff;
+    font-size: 1.2em;
+    border: 2px solid #4d2e1e !important;
+    border-radius: 8px;
     cursor: pointer;
-    transition: 0.3s;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 button:hover {
-    background: #ff5400;
+    background: #8c6b5d !important;
     transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+#gameCanvas {
+    border-radius: 15px;
+    box-shadow: 0 0 30px rgba(0,0,0,0.3);
 }

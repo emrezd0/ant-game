@@ -1,85 +1,84 @@
-const express = require("express");
-const http = require("http");
-const socketIo = require("socket.io");
+const express = require('express');
+const http = require('http');
+const socketIo = require('socket.io');
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
-
 const PORT = process.env.PORT || 3000;
 
-app.use(express.static("public"));
+app.use(express.static('public'));
 
-const players = {};
-const foods = [];
-const usedColors = [];
+let players = {};
+let foods = [];
+const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEEAD', '#D4A5A5'];
 
-function getUniqueColor() {
-    const colors = ["red", "blue", "green", "purple", "orange", "pink", "cyan", "brown"];
-    for (let color of colors) {
-        if (!usedColors.includes(color)) {
-            usedColors.push(color);
-            return color;
-        }
+function resetGame() {
+    players = {};
+    foods = [];
+    for(let i = 0; i < 30; i++) {
+        foods.push({
+            x: Math.random() * 1000,
+            y: Math.random() * 700
+        });
     }
-    return colors[Math.floor(Math.random() * colors.length)];
 }
 
-// Yemleri oluştur
-for (let i = 0; i < 20; i++) {
-    foods.push({ x: Math.random() * 800, y: Math.random() * 600 });
-}
+resetGame();
 
-io.on("connection", (socket) => {
-    socket.on("login", (username) => {
-        let newColor = getUniqueColor();
+io.on('connection', socket => {
+    socket.on('login', username => {
         players[socket.id] = {
             id: socket.id,
             username,
-            color: newColor,
+            color: colors[Math.floor(Math.random()*colors.length)],
             ants: 1,
-            x: Math.random() * 800,
-            y: Math.random() * 600
+            x: 500,
+            y: 350
         };
-
-        socket.emit("updateFoods", foods);
-        io.emit("updatePlayers", players);
+        socket.emit('init', { players, foods });
+        io.emit('updatePlayers', players);
     });
 
-    socket.on("move", (data) => {
-        if (players[socket.id]) {
-            players[socket.id].x = data.x;
-            players[socket.id].y = data.y;
+    socket.on('move', pos => {
+        if(players[socket.id]) {
+            players[socket.id].x = pos.x;
+            players[socket.id].y = pos.y;
+            io.emit('updatePlayers', players);
         }
-        io.emit("updatePlayers", players);
     });
 
-    socket.on("eatFood", ({ foodIndex }) => {
-        if (foods[foodIndex]) {
+    socket.on('eatFood', ({ foodIndex }) => {
+        if(foods[foodIndex]) {
             foods.splice(foodIndex, 1);
-            foods.push({ x: Math.random() * 800, y: Math.random() * 600 });
-
-            if (players[socket.id]) {
-                players[socket.id].ants += 1;
-            }
-
-            io.emit("updateFoods", foods);
-            io.emit("updatePlayers", players);
+            foods.push({ x: Math.random()*1000, y: Math.random()*700 });
+            players[socket.id].ants++;
+            io.emit('updateFoods', foods);
+            io.emit('updatePlayers', players);
         }
     });
 
-    socket.on("playerEaten", ({ eatenId }) => {
-        if (players[eatenId]) {
+    socket.on('playerEaten', ({ eatenId }) => {
+        if(players[eatenId]) {
             players[socket.id].ants += players[eatenId].ants;
             delete players[eatenId];
-            io.emit("updatePlayers", players);
+            io.emit('updatePlayers', players);
+
+            if(Object.keys(players).length === 1) {
+                const winner = players[Object.keys(players)[0]];
+                io.emit('gameOver', { 
+                    winner: winner.username,
+                    color: winner.color
+                });
+                resetGame();
+            }
         }
     });
 
-    socket.on("disconnect", () => {
+    socket.on('disconnect', () => {
         delete players[socket.id];
-        io.emit("updatePlayers", players);
+        io.emit('updatePlayers', players);
     });
 });
 
-server.listen(PORT, () => console.log(`Sunucu çalışıyor: http://localhost:${PORT}`));
+server.listen(PORT, () => console.log(`Sunucu ${PORT} portunda çalışıyor...`));
