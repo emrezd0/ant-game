@@ -158,7 +158,7 @@ function drawHUD() {
     ctx.fillStyle = '#fff';
     ctx.font = '20px "Anton", sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText(`🐜 KARINCA SAYISI: ${currentPlayer ? currentPlayer.ants : 0}`, 30, 50);
+    ctx.fillText(`🐜 KOLONİ GÜCÜ: ${currentPlayer ? currentPlayer.ants : 0}`, 30, 50);
     
     // Oyuncu listesi
     const playerCount = Object.keys(players).length;
@@ -240,7 +240,6 @@ function gameLoop() {
     
     updateMovement();
     checkCollisions();
-
     Object.values(players).forEach(player => {
         if(player.id !== currentPlayer?.id) {
             drawAnts(player);
